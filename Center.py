@@ -85,6 +85,8 @@ class Center:
 		self.estimated_f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems)
 		self.estimated_f_after_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems + self.bad_guys.Items)
 		
+		# print (self.estimated_f_before_attack)
+		# print (self.estimated_f_after_attack)
 		return [self.estimated_f_after_attack[i] - self.estimated_f_before_attack[i] for i in range(len(self.estimated_f_before_attack))]
 
 	def run(self):
@@ -94,9 +96,9 @@ class Center:
 		Returns: 
 			overall gain G
 		"""
-		for r in range(1, self.round+1):
+		for r in range(self.round):
 
-			print ("==== Round", r, "====")
+			print ("==== Round", r+1, "====")
 
 			self.good_guys.getInitItems()
 			self.good_guys.getPerturbedItems()
@@ -111,7 +113,6 @@ class Center:
 			self.Algorithm()
 			
 			print (self.validation())
-
 
 
 def parse_arguments():
@@ -137,9 +138,9 @@ if __name__ == '__main__':
 	# if args.p2 == 'SingleRoundFlipCoin':
 	# 	bad_protocol = SingleRoundFlipCoin()
 	
-	good_guys = GoodGuys(n=10, d=10, distribution=zipf(category=10), protocol=kRR(d=10))
-	bad_guys = BadGuys(m=3, d=10, promotedItems=3, attack_protocol="kRR", protocol=MGA(d=10))
+	good_guys = GoodGuys(n=10, d=10, distribution=zipf(d=10), protocol=OUE(d=10))
+	bad_guys = BadGuys(m=3, d=10, promotedItems=[3, 4], attack_protocol="OUE", protocol=MGA(d=10))
 
-	center = Center(round=1, good_guys=good_guys, bad_guys=bad_guys)
+	center = Center(round=2, good_guys=good_guys, bad_guys=bad_guys)
 	center.run()
 

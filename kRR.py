@@ -22,6 +22,7 @@ class kRR:
 			return perturbed_item 
 
 	def aggregate(self, perturbed_items):
+		#print ("~", perturbed_items)
 		n = len(perturbed_items)
 		estimated_f = []
 		for v in range(self.d):

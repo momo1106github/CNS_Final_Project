@@ -33,11 +33,18 @@ class MGA():
             Suggested item to be sent (list of int)
         """
         if (protocol == "kRR"):
-            return item_list
+            return random.choice(item_list)
         elif (protocol == "OUE"):
             bit_vector = [0] * self.d
             for item_index in item_list:
                 bit_vector[item_index] = 1
+
+            cnt_one = bit_vector.count(1)
+            p = (4 - cnt_one) / (len(bit_vector) - cnt_one)
+
+            for i in range(len(bit_vector)):
+                if bit_vector[i] == 0:
+                    bit_vector[i] = 1 if random.random() <= p else 0 
             return bit_vector 
         else:
             assert(False)
