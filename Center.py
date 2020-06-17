@@ -67,9 +67,10 @@ class Center:
 		self.m = bad_guys.m
 		self.good_guys = good_guys
 		self.bad_guys = bad_guys
-		self.estimated_f_before_attack = [0] * self.n
-		self.estimated_f_after_attack = [0] * (self.n + self.m)
-
+		self.true_f_before_attack = []
+		self.estimated_f_before_attack = []
+		self.estimated_f_after_attack = []
+		self.diff_f_vs_estimated_f = []
 	
 	def Algorithm(self):
 		"""
@@ -79,18 +80,17 @@ class Center:
 
 	def validation(self):
 		"""
-		The function to validate the gain (for single round?).
+		The function to count the frequency
 
-		Returns:
-			gain
 		"""
+		self.true_f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.initItems)
 		self.estimated_f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems)
 		self.estimated_f_after_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems + self.bad_guys.Items)
-		
-		# print (self.estimated_f_before_attack)
-		# print (self.estimated_f_after_attack)
-		return [self.estimated_f_after_attack[i] - self.estimated_f_before_attack[i] for i in range(len(self.estimated_f_before_attack))]
+		for i, j in zip(self.estimated_f_before_attack, self.estimated_f_after_attack):
+			self.diff_f_vs_estimated_f.append(i - j)
+		self.diff_f_vs_estimated_f_norm = [(i - min(self.diff_f_vs_estimated_f)) / (max(self.diff_f_vs_estimated_f) - min(self.diff_f_vs_estimated_f)) for i in self.diff_f_vs_estimated_f]
 
+		
 	def run(self):
 		"""
 		The function to run the whole process.
@@ -114,7 +114,9 @@ class Center:
 			# our algorithm
 			self.Algorithm()
 			
-			logging.info(f"delta_frequency: {self.validation()}")
+			self.validation()
+			#logging.info(f'diff_f_vs_estimated_f: {self.diff_f_vs_estimated_f}')
+			logging.info(f'diff_f_vs_estimated_f_norm: {self.diff_f_vs_estimated_f_norm}')
 
 
 def parse_arguments():
@@ -140,7 +142,7 @@ if __name__ == '__main__':
 	if promoted_items != None and args.d <= promoted_items[-1]:
 		logging.error('promoted item\'s index cannot exceed the size of domain!')
 		exit(-1)
-		
+
 	good_protocol = kRR(d=args.d) if args.p1 == 'kRR' else OUE(d=args.d)
 	bad_protocol = MGA(d=args.d, attack_protocol=args.p1)
 
