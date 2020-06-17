@@ -70,7 +70,8 @@ class Center:
 		self.true_f_before_attack = []
 		self.estimated_f_before_attack = []
 		self.estimated_f_after_attack = []
-		self.diff_f_vs_estimated_f = []
+		self.diff_f_vs_estimated_f_before_attack = []
+		self.diff_f_vs_estimated_f_before_attack_norm = []
 	
 	def Algorithm(self):
 		"""
@@ -83,12 +84,12 @@ class Center:
 		The function to count the frequency
 
 		"""
-		self.true_f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.initItems)
+		self.f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.initItems)
 		self.estimated_f_before_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems)
 		self.estimated_f_after_attack = self.good_guys.protocol.aggregate(self.good_guys.perturbedItems + self.bad_guys.Items)
-		for i, j in zip(self.estimated_f_before_attack, self.estimated_f_after_attack):
-			self.diff_f_vs_estimated_f.append(i - j)
-		self.diff_f_vs_estimated_f_norm = [(i - min(self.diff_f_vs_estimated_f)) / (max(self.diff_f_vs_estimated_f) - min(self.diff_f_vs_estimated_f)) for i in self.diff_f_vs_estimated_f]
+		for i, j in zip(self.estimated_f_before_attack, self.f_before_attack):
+			self.diff_f_vs_estimated_f_before_attack.append(i - j)
+		self.diff_f_vs_estimated_f_before_attack_norm = [(i - min(self.diff_f_vs_estimated_f_before_attack)) / (max(self.diff_f_vs_estimated_f_before_attack) - min(self.diff_f_vs_estimated_f_before_attack)) for i in self.diff_f_vs_estimated_f_before_attack]
 
 		
 	def run(self):
@@ -100,23 +101,23 @@ class Center:
 		"""
 		for r in range(self.round):
 
-			logging.info(f"======= Round {r+1} ========")
+			print (f"======= Round {r+1} ========")
 
 			self.good_guys.getInitItems()
 			self.good_guys.getPerturbedItems()
 
-			logging.info(f"good_guys: {self.good_guys.initItems}")
-			logging.info(f"pertubed: {self.good_guys.perturbedItems}")
+			print (f"good_guys: {self.good_guys.initItems}")
+			print(f"pertubed: {self.good_guys.perturbedItems}")
 
 			self.bad_guys.getItems()
-			logging.info(f"bad_guys: {self.bad_guys.Items}")
+			print (f"bad_guys: {self.bad_guys.Items}")
 
 			# our algorithm
 			self.Algorithm()
 			
 			self.validation()
 			#logging.info(f'diff_f_vs_estimated_f: {self.diff_f_vs_estimated_f}')
-			logging.info(f'diff_f_vs_estimated_f_norm: {self.diff_f_vs_estimated_f_norm}')
+			print ('diff_f_vs_estimated_f_norm:', [round(i, 3) for i in self.diff_f_vs_estimated_f_before_attack_norm])
 
 
 def parse_arguments():
