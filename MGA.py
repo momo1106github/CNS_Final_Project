@@ -1,4 +1,5 @@
 import random
+from math import exp
 
 '''
 protocol : KRR or OUE
@@ -11,17 +12,20 @@ class MGA():
     This class implement some methods for MGA.
     """
 
-    def __init__(self, d=10):
+    def __init__(self, attack_protocol, d=10, epsilon=1.09):
         """
         The constructor for MGA class.
 
         Attributes:
-            category (int): How many category that want to be generated.
+            d (int): How many category that want to be generated.
         """
         
         self.d = d
+        self.attack_protocol = attack_protocol
+        self.p = exp(epsilon) / (d - 1 + exp(epsilon)) if attack_protocol == 'kRR' else 0.5
+        self.q = 1 / (d - 1 + exp(epsilon)) if attack_protocol == 'kRR' else 1 / (exp(epsilon) + 1)
 
-    def getItem(self, protocol, item_list):
+    def getItem(self, item_list):
         """
         The function to encode items that want to be promoted.
 
@@ -32,15 +36,17 @@ class MGA():
         Returns:
             Suggested item to be sent (list of int)
         """
-        if (protocol == "kRR"):
+        if (self.attack_protocol == "kRR"):
             return random.choice(item_list)
-        elif (protocol == "OUE"):
+        elif (self.attack_protocol == "OUE"):
             bit_vector = [0] * self.d
             for item_index in item_list:
                 bit_vector[item_index] = 1
 
             cnt_one = bit_vector.count(1)
-            p = (4 - cnt_one) / (len(bit_vector) - cnt_one)
+            expected_ones = (1 - self.p) + (self.q * (self.d - 1))
+            
+            p = (expected_ones - cnt_one) / (len(bit_vector) - cnt_one)
 
             for i in range(len(bit_vector)):
                 if bit_vector[i] == 0:

@@ -1,10 +1,13 @@
 import argparse
 import random
+import logging
 from math import exp
 from zipf import zipf
 from kRR import kRR
 from MGA import MGA
 from OUE import OUE
+
+logging.basicConfig(level=logging.INFO)
 
 class GoodGuys:
 	def __init__(self, n, d, distribution, protocol):
@@ -38,17 +41,16 @@ class GoodGuys:
 		return self.perturbedItems
 
 class BadGuys:
-	def __init__(self, m, d, promotedItems, attack_protocol, protocol):
+	def __init__(self, m, d, promotedItems, protocol):
 		self.m = m
 		self.d = d
 		self.promotedItems = promotedItems
 		self.Items = [0] * m
-		self.attack_protocol = attack_protocol
 		self.protocol = protocol
 
 	def getItems(self):
 		for i in range(self.m):
-			self.Items[i] = self.protocol.getItem(self.attack_protocol, self.promotedItems)
+			self.Items[i] = self.protocol.getItem(self.promotedItems)
 		return self.Items
 
 class Center:
@@ -98,49 +100,53 @@ class Center:
 		"""
 		for r in range(self.round):
 
-			print ("==== Round", r+1, "====")
+			logging.info(f"======= Round {r+1} ========")
 
 			self.good_guys.getInitItems()
 			self.good_guys.getPerturbedItems()
 
-			print ("good_guys:", self.good_guys.initItems)
-			print ("pertubed:", self.good_guys.perturbedItems)
+			logging.info(f"good_guys: {self.good_guys.initItems}")
+			logging.info(f"pertubed: {self.good_guys.perturbedItems}")
 
 			self.bad_guys.getItems()
-			print ("bad_guys:", self.bad_guys.Items)
+			logging.info(f"bad_guys: {self.bad_guys.Items}")
 
 			# our algorithm
 			self.Algorithm()
 			
-			print (self.validation())
+			logging.info(f"delta_frequency: {self.validation()}")
 
 
 def parse_arguments():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-n', type=int, default=10, help='number of good guys')
-	parser.add_argument('-m', type=int, default=1, help='number of bad guys')
-	parser.add_argument('-p1', type=str, default='', help='protocol of good guys')
-	parser.add_argument('-p2', type=str, default='', help='protocol of bad guys')
-	parser.add_argument('-r', type=int, default=10, help='number of rounds')
+	parser.add_argument('-n', type=int, default=10, metavar='n', help='number of good guys, default = 10')
+	parser.add_argument('-p1', type=str, default='kRR', metavar='good_protocol', help='protocol of good guys, \'kRR\' or \'OUE\', default = \'kRR\'')
+	parser.add_argument('-m', type=int, default=3, metavar='m', help='number of bad guys, default = 3')
+	# parser.add_argument('-p2', type=str, default='MGA', metavar='bad_protocol',help='protocol of bad guys')
+	parser.add_argument('-d', type=int, default=10, help='size of domain, default = 10')
+	parser.add_argument('--promote', type=str, default="3,4,5", metavar='promoted_items', help='the items attackers want to promoted, separate by \',\' default = \'3,4,5\'')
+	parser.add_argument('-r', type=int, default=10, metavar='round', help='number of rounds, default = 10')
 	args = parser.parse_args()
 
 	return args
 
 if __name__ == '__main__':
 	# help(Center)
-	# args = parse_arguments()
+	args = parse_arguments()
 
-	# good_protocol = None
-	# bad_protocol = None
-	# if args.p1 == 'SingleRoundFlipCoin':
-	# 	good_protocol = SingleRoundFlipCoin()
+	promoted_items = [int(i) for i in args.promote.split(',')]
+	promoted_items.sort()
 
-	# if args.p2 == 'SingleRoundFlipCoin':
-	# 	bad_protocol = SingleRoundFlipCoin()
-	
-	good_guys = GoodGuys(n=10, d=10, distribution=zipf(d=10), protocol=OUE(d=10))
-	bad_guys = BadGuys(m=3, d=10, promotedItems=[3, 4], attack_protocol="OUE", protocol=MGA(d=10))
+	if promoted_items != None and args.d <= promoted_items[-1]:
+		logging.error('promoted item\'s index cannot exceed the size of domain!')
+		exit(-1)
+		
+	good_protocol = kRR(d=args.d) if args.p1 == 'kRR' else OUE(d=args.d)
+	bad_protocol = MGA(d=args.d, attack_protocol=args.p1)
 
-	center = Center(round=2, good_guys=good_guys, bad_guys=bad_guys)
+	good_guys = GoodGuys(n=args.n, d=args.d, distribution=zipf(d=args.d), protocol=good_protocol)
+	bad_guys = BadGuys(m=args.m, d=args.d, promotedItems=promoted_items, protocol=bad_protocol)
+
+	center = Center(round=args.r, good_guys=good_guys, bad_guys=bad_guys)
 	center.run()
 
