@@ -11,7 +11,8 @@ class OUE():
         The constructor for OUE class.
 
         Attributes:
-            category (int): How many category that want to be generated.
+            d (int): How many category that want to be generated.
+            epsilon (double): Epsilon used to calculate probability q.
         """
         
         self.d = d
@@ -24,7 +25,7 @@ class OUE():
         The function to encode items that want to be promoted.
 
         Parameters:
-            promote_item (int): Item that want to be promoted.
+            item (int): Item that want to be promoted.
 
         Returns:
             Encoded items (list of int)
@@ -42,7 +43,7 @@ class OUE():
         Otherwise if the bit is 0, it is flipped to 1 with a probability q.
 
         Parameters:
-            encoded_items (list of int): Encoded items that are going to be perturbed.
+            encoded_item (list of int): Encoded items that are going to be perturbed.
 
         Returns:
             Perturbed items (list of int)
@@ -69,14 +70,13 @@ class OUE():
 
         Parameters:
             perturbed_items (list of int): Perturbed items that are going to be check.
-            frequency_estimator (list of int): Frequency of each item
         """
         n = len(perturbed_items)
         estimated_f = []
         for v in range(self.d):
             p_ = 0
             for i in range(n):
-                if perturbed_items[i][v] == 1:
+                if perturbed_items[i] == v:
                     p_ += 1
 
             p_ /= n
